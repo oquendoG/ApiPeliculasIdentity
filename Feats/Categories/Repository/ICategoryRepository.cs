@@ -1,6 +1,6 @@
-﻿using ApiPeliculas.Shared;
+﻿using ApiPeliculasIdentity.Shared;
 
-namespace ApiPeliculas.Feats.Categories.Repository;
+namespace ApiPeliculasIdentity.Feats.Categories.Repository;
 
 public interface ICategoryRepository
 {

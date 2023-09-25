@@ -1,11 +1,11 @@
-﻿using ApiPeliculas.Feats.Movies.DTOs;
-using ApiPeliculas.Feats.Movies.Repository;
-using ApiPeliculas.Shared;
+﻿using ApiPeliculasIdentity.Feats.Movies.DTOs;
+using ApiPeliculasIdentity.Feats.Movies.Repository;
+using ApiPeliculasIdentity.Shared;
 using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ApiPeliculas.Feats.Movies.Controllers;
+namespace ApiPeliculasIdentity.Feats.Movies.Controllers;
 
 [ApiController]
 [Route("api/peliculas")]

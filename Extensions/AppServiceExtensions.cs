@@ -1,13 +1,14 @@
-﻿using ApiPeliculas.Feats.Categories.Repository;
-using ApiPeliculas.Feats.Movies.Repository;
-using ApiPeliculas.Feats.Users.Repository;
-using ApiPeliculas.Shared;
+﻿using ApiPeliculasIdentity.Data;
+using ApiPeliculasIdentity.Feats.Categories.Repository;
+using ApiPeliculasIdentity.Feats.Movies.Repository;
+using ApiPeliculasIdentity.Feats.Users.Repository;
+using ApiPeliculasIdentity.Shared;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
-namespace ApiPeliculas.Extensions;
+namespace ApiPeliculasIdentity.Extensions;
 
 public static class AppServiceExtensions
 {
@@ -16,7 +17,6 @@ public static class AppServiceExtensions
         services.AddTransient<ICategoryRepository, CategoryRepository>();
         services.AddTransient<IMovieRepository, MovieRepository>();
         services.AddTransient<IUserRepository, UserRepository>();
-        services.AddTransient<IPasswordHasher<User>, PasswordHasher<User>>();
     }
 
     public static void ConfigureCors(this IServiceCollection services)
@@ -46,5 +46,10 @@ public static class AppServiceExtensions
                 ValidateAudience = false,
             };
         });
+    }
+    public static void ConfigureIdentity(this IServiceCollection services)
+    {
+        services.AddIdentity<AppUser, IdentityRole>()
+            .AddEntityFrameworkStores<AppDbContext>();
     }
 }

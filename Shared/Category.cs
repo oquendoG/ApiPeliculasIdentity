@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ApiPeliculas.Shared;
+namespace ApiPeliculasIdentity.Shared;
 
 public class Category
 {

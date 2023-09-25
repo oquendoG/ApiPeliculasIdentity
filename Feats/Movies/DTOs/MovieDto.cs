@@ -1,7 +1,7 @@
-﻿using ApiPeliculas.Shared.Enums;
+﻿using ApiPeliculasIdentity.Shared.Enums;
 using System.ComponentModel.DataAnnotations;
 
-namespace ApiPeliculas.Feats.Movies.DTOs;
+namespace ApiPeliculasIdentity.Feats.Movies.DTOs;
 
 public class MovieDto
 {

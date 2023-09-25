@@ -1,11 +1,11 @@
-﻿using ApiPeliculas.Feats.Categories.DTOs;
-using ApiPeliculas.Feats.Categories.Repository;
-using ApiPeliculas.Shared;
+﻿using ApiPeliculasIdentity.Feats.Categories.DTOs;
+using ApiPeliculasIdentity.Feats.Categories.Repository;
+using ApiPeliculasIdentity.Shared;
 using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ApiPeliculas.Feats.Categories.Controllers;
+namespace ApiPeliculasIdentity.Feats.Categories.Controllers;
 
 [ApiController]
 [Route("api/Categorias")]

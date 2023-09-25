@@ -1,8 +1,8 @@
-﻿using ApiPeliculas.Shared.Enums;
+﻿using ApiPeliculasIdentity.Shared.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace ApiPeliculas.Shared;
+namespace ApiPeliculasIdentity.Shared;
 
 public class Movie
 {

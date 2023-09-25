@@ -1,4 +1,4 @@
-﻿namespace ApiPeliculas.Shared.Enums;
+﻿namespace ApiPeliculasIdentity.Shared.Enums;
 
 public enum Pegi
 {

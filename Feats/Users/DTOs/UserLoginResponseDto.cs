@@ -1,13 +1,13 @@
-﻿using ApiPeliculas.Shared;
+﻿using ApiPeliculasIdentity.Shared;
 
-namespace ApiPeliculas.Feats.Users.DTOs;
+namespace ApiPeliculasIdentity.Feats.Users.DTOs;
 
 /// <summary>
 /// Respuesta del servidor al autenticarse
 /// </summary>
 public class UserLoginResponseDto
 {
-    public required User? User { get; set; }
+    public required UserDataDto? User { get; set; }
     public required string Token { get; set; }
 
     public bool IsAuthenticated { get; set; } = false;

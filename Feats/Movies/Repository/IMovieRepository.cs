@@ -1,6 +1,6 @@
-﻿using ApiPeliculas.Shared;
+﻿using ApiPeliculasIdentity.Shared;
 
-namespace ApiPeliculas.Feats.Movies.Repository;
+namespace ApiPeliculasIdentity.Feats.Movies.Repository;
 
 public interface IMovieRepository
 {

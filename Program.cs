@@ -1,5 +1,5 @@
-using ApiPeliculas.Data;
-using ApiPeliculas.Extensions;
+using ApiPeliculasIdentity.Data;
+using ApiPeliculasIdentity.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -19,15 +19,16 @@ builder.Logging.AddSerilog(logger);
 // Add services to the container.
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("connection"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("connection2"));
 });
 
 builder.Services.AddResponseCaching();
 
-//agregamos servicios de extensión
+//Agregamos servicios de extensión
 //Extensión services added
 builder.Services.AddAppServices();
 builder.Services.ConfigureCors();
+builder.Services.ConfigureIdentity();
 
 //autenticación con jwt
 string key = builder.Configuration.GetValue<string>("ApiSettings:PasswordJwt")!;
@@ -45,7 +46,7 @@ builder.Services.AddSwaggerGen(options =>
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = $"Autenticación usndo JWT con el esquema Bearer. " +
-        $"\r\n\r\n Ingresa la palabra Bearer seguida de una espacio y" +
+        $"\r\n\r\n Ingresa la palabra Bearer seguida de un espacio y " +
         $"luego el token en el espacio de abajo " +
         "Ejemplo: \"Bearer lakdjhf4545fadf4a564faa54\"",
         Name = "Authorization",

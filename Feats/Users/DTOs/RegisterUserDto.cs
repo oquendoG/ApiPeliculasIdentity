@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ApiPeliculas.Feats.Users.DTOs;
+namespace ApiPeliculasIdentity.Feats.Users.DTOs;
 
 public class RegisterUserDto
 {

@@ -1,13 +1,13 @@
-﻿using ApiPeliculas.Feats.Users.DTOs;
-using ApiPeliculas.Shared;
+﻿using ApiPeliculasIdentity.Feats.Users.DTOs;
+using ApiPeliculasIdentity.Shared;
 
-namespace ApiPeliculas.Feats.Users.Repository;
+namespace ApiPeliculasIdentity.Feats.Users.Repository;
 
 public interface IUserRepository
 {
-    Task<User?> GetUser(Guid id);
-    Task<ICollection<User>> GetUsers();
+    Task<AppUser?> GetUser(string id);
+    Task<ICollection<AppUser>> GetUsers();
     Task<bool> IsUniqueUser(string username);
     Task<UserLoginResponseDto> Login(LoginUserDto loginUser);
-    Task<User> Register(RegisterUserDto registerUser);
+    Task<UserDataDto> Register(RegisterUserDto registerUser);
 }

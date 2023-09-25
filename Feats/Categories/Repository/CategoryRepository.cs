@@ -1,8 +1,8 @@
-﻿using ApiPeliculas.Data;
-using ApiPeliculas.Shared;
+﻿using ApiPeliculasIdentity.Data;
+using ApiPeliculasIdentity.Shared;
 using Microsoft.EntityFrameworkCore;
 
-namespace ApiPeliculas.Feats.Categories.Repository;
+namespace ApiPeliculasIdentity.Feats.Categories.Repository;
 
 public class CategoryRepository : ICategoryRepository
 {

@@ -1,12 +1,12 @@
 ﻿using Mapster;
-using ApiPeliculas.Shared;
 using Microsoft.AspNetCore.Mvc;
-using ApiPeliculas.Feats.Users.DTOs;
-using ApiPeliculas.Feats.Users.Repository;
 using System.Net;
 using Microsoft.AspNetCore.Authorization;
+using ApiPeliculasIdentity.Feats.Users.DTOs;
+using ApiPeliculasIdentity.Feats.Users.Repository;
+using ApiPeliculasIdentity.Shared;
 
-namespace ApiPeliculas.Feats.Users.Controllers;
+namespace ApiPeliculasIdentity.Feats.Users.Controllers;
 
 [ApiController]
 [Route("api/usuarios")]
@@ -22,15 +22,14 @@ public class UsersController : ControllerBase
         ApiResponse = new();
     }
 
-    [Authorize(Roles = "Admin")]
-    [HttpGet(Name = "usuarios")]
-    [ResponseCache(CacheProfileName = "default")]
+    [HttpGet]
+    [Authorize(Roles = "admin")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUsers()
     {
-        ICollection<User> usersDb =
+        ICollection<AppUser> usersDb =
             await userRepository.GetUsers();
         if (usersDb.Count == 0)
         {
@@ -43,16 +42,16 @@ public class UsersController : ControllerBase
         return Ok(users);
     }
 
-    [Authorize(Roles = "Admin")]
-    [HttpGet("{id:Guid}", Name = "usuario")]
+    [Authorize(Roles = "admin")]
+    [HttpGet("{id}", Name = "usuario")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GetUser(Guid id)
+    public async Task<IActionResult> GetUser(string id)
     {
-        User? userDb =
+        AppUser? userDb =
             await userRepository.GetUser(id);
         if (userDb is null)
         {
@@ -87,16 +86,16 @@ public class UsersController : ControllerBase
             return BadRequest(ApiResponse);
         }
 
-        User user = await userRepository.Register(userToRegister);
+        UserDataDto user = await userRepository.Register(userToRegister);
         if (user is null)
         {
             ApiResponse.StatusCode = HttpStatusCode.BadRequest;
-            ApiResponse.ErrorMessages.Add("Error en el registro");
+            ApiResponse.ErrorMessages.Add("Error en el registro, revise los campos");
             ApiResponse.IsSuccess = false;
             return BadRequest(ApiResponse);
         }
 
-        ApiResponse.StatusCode = HttpStatusCode.BadRequest;
+        ApiResponse.StatusCode = HttpStatusCode.OK;
         ApiResponse.IsSuccess = true;
 
         return Ok(ApiResponse);

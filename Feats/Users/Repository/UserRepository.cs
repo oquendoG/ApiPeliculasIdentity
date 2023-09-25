@@ -1,6 +1,7 @@
-﻿using ApiPeliculas.Data;
-using ApiPeliculas.Feats.Users.DTOs;
-using ApiPeliculas.Shared;
+﻿using ApiPeliculasIdentity.Data;
+using ApiPeliculasIdentity.Feats.Users.DTOs;
+using ApiPeliculasIdentity.Shared;
+using Mapster;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -8,29 +9,32 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace ApiPeliculas.Feats.Users.Repository;
+namespace ApiPeliculasIdentity.Feats.Users.Repository;
 
 public class UserRepository : IUserRepository
 {
     private readonly AppDbContext context;
-    private readonly IPasswordHasher<User> passwordHasher;
-    private readonly string? PasswordJwt;
-    public UserRepository(AppDbContext context, 
-        IPasswordHasher<User> passwordHasher, IConfiguration configuration)
+    private readonly UserManager<AppUser> userManager;
+    private readonly RoleManager<IdentityRole> roleManager;
+    private readonly string PasswordJwt;
+    public UserRepository(AppDbContext context,
+        IConfiguration configuration, UserManager<AppUser> userManager,
+        RoleManager<IdentityRole> roleManager)
     {
         this.context = context;
-        this.passwordHasher = passwordHasher;
-        PasswordJwt = configuration.GetValue<string>("ApiSettings:PasswordJwt");
+        this.userManager = userManager;
+        this.roleManager = roleManager;
+        PasswordJwt = configuration.GetValue<string>("ApiSettings:PasswordJwt")!;
     }
 
-    public async Task<User?> GetUser(Guid id)
+    public async Task<AppUser?> GetUser(string id)
     {
         return await context.Users
             .AsNoTracking()
             .FirstOrDefaultAsync(user => user.Id == id);
     }
 
-    public async Task<ICollection<User>> GetUsers()
+    public async Task<ICollection<AppUser>> GetUsers()
     {
         return await context.Users
             .AsNoTracking()
@@ -40,35 +44,52 @@ public class UserRepository : IUserRepository
 
     public async Task<bool> IsUniqueUser(string username)
     {
-        User? userDb = await context.Users
+        AppUser? userDb = await context.Users
             .AsNoTracking()
             .FirstOrDefaultAsync(user => user.UserName == username);
 
         return userDb == null;
     }
 
-    public async Task<User> Register(RegisterUserDto registerUser)
+    public async Task<UserDataDto> Register(RegisterUserDto registerUser)
     {
 
-        User user = new()
+        AppUser user = new()
         {
             UserName = registerUser.UserName,
             Name = registerUser.Name,
-            Role = registerUser.Role,
+            Email = registerUser.UserName,
+            NormalizedEmail = registerUser.UserName.ToUpper(),
         };
 
-        user.Password = passwordHasher.HashPassword(user, registerUser.Password);
+        IdentityResult result = await userManager
+            .CreateAsync(user, registerUser.Password);
 
-        await context.Users.AddAsync(user);
-        await context.SaveChangesAsync();
+        if (!result.Succeeded)
+        {
+            return new UserDataDto();
+        }
 
-        return user;
+        if (result.Succeeded && !roleManager.RoleExistsAsync("admin").GetAwaiter().GetResult())
+        {
+            await roleManager.CreateAsync(new IdentityRole("admin"));
+            await roleManager.CreateAsync(new IdentityRole("registrado"));
+        }
+
+        await userManager.AddToRoleAsync(user, "registrado");
+        AppUser? registeredUser = await context.Users
+            .FirstOrDefaultAsync(user => user.UserName == registerUser.UserName);
+
+        return registeredUser!.Adapt<UserDataDto>();
     }
 
     public async Task<UserLoginResponseDto> Login(LoginUserDto loginUser)
     {
-        User? userDb = await context.Users
+        AppUser? userDb = await context.Users
             .FirstOrDefaultAsync(user => user.UserName == loginUser.UserName);
+
+        bool isValid = await userManager
+            .CheckPasswordAsync(userDb!, loginUser.Password);
 
         UserLoginResponseDto response = new()
         {
@@ -78,18 +99,12 @@ public class UserRepository : IUserRepository
             Message = "Usuario no encontrado"
         };
 
-        if (userDb is null)
+        if (userDb is null || !isValid)
         {
             return response;
         }
 
-        PasswordVerificationResult result = passwordHasher
-            .VerifyHashedPassword(userDb, userDb.Password, loginUser.Password);
-        if (result == PasswordVerificationResult.Failed)
-        {
-            response.Message = "Credenciales de usuario incorrectas, verifique por favor";
-            return response;
-        }
+        IList<string> roles = await userManager.GetRolesAsync(userDb);
 
         JwtSecurityTokenHandler jwtHandler = new();
         byte[] key = Encoding.ASCII.GetBytes(PasswordJwt!);
@@ -104,8 +119,8 @@ public class UserRepository : IUserRepository
         {
             Subject = new ClaimsIdentity(new Claim[]
             {
-                new Claim(ClaimTypes.Name, userDb.UserName),
-                new Claim(ClaimTypes.Role, userDb.Role)
+                new Claim(ClaimTypes.Name, userDb.UserName!),
+                new Claim(ClaimTypes.Role, roles.FirstOrDefault()!)
             }),
             Expires = DateTime.UtcNow.AddDays(7),
             SigningCredentials = new(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -114,7 +129,7 @@ public class UserRepository : IUserRepository
         SecurityToken token = jwtHandler.CreateToken(tokenDescriptor);
 
         response.Token = jwtHandler.WriteToken(token);
-        response.User = userDb;
+        response.User = userDb.Adapt<UserDataDto>();
         response.IsAuthenticated = true;
         response.Message = "El usuario esta autenticado en el sistema";
 

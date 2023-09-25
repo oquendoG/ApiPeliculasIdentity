@@ -1,8 +1,8 @@
-﻿using ApiPeliculas.Data;
-using ApiPeliculas.Shared;
+﻿using ApiPeliculasIdentity.Data;
+using ApiPeliculasIdentity.Shared;
 using Microsoft.EntityFrameworkCore;
 
-namespace ApiPeliculas.Feats.Movies.Repository;
+namespace ApiPeliculasIdentity.Feats.Movies.Repository;
 
 public class MovieRepository : IMovieRepository
 {
@@ -77,7 +77,7 @@ public class MovieRepository : IMovieRepository
     public async Task<ICollection<Movie>> Search(string name)
     {
         IQueryable<Movie> movies = context.Movies;
-        if (!String.IsNullOrEmpty(name))
+        if (!string.IsNullOrEmpty(name))
         {
             movies = movies
                 .Where(movie => movie.Name.Contains(name) || movie.Description.Contains(name));
