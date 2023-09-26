@@ -8,6 +8,7 @@ using ApiPeliculasIdentity.Shared;
 
 namespace ApiPeliculasIdentity.Feats.Users.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/usuarios")]
 public class UsersController : ControllerBase

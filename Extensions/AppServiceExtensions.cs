@@ -31,10 +31,11 @@ public static class AppServiceExtensions
     {
         services.AddAuthentication(options =>
         {
+            options.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 
-        }).AddJwtBearer(options =>
+        }).AddJwtBearer("Bearer", options =>
         {
             options.RequireHttpsMetadata = false;
             options.SaveToken = true;
@@ -44,6 +45,7 @@ public static class AppServiceExtensions
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key!)),
                 ValidateIssuer = false,
                 ValidateAudience = false,
+                
             };
         });
     }
