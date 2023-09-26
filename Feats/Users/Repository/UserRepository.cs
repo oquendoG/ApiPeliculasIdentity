@@ -4,10 +4,6 @@ using ApiPeliculasIdentity.Shared;
 using Mapster;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace ApiPeliculasIdentity.Feats.Users.Repository;
 
@@ -16,15 +12,18 @@ public class UserRepository : IUserRepository
     private readonly AppDbContext context;
     private readonly UserManager<AppUser> userManager;
     private readonly RoleManager<IdentityRole> roleManager;
-    private readonly string PasswordJwt;
-    public UserRepository(AppDbContext context,
-        IConfiguration configuration, UserManager<AppUser> userManager,
-        RoleManager<IdentityRole> roleManager)
+    private readonly SignInManager<AppUser> signInManager;
+    private readonly ILogger<UserRepository> logger;
+
+    public UserRepository(AppDbContext context, UserManager<AppUser> userManager,
+        RoleManager<IdentityRole> roleManager, SignInManager<AppUser> signInManager,
+        ILogger<UserRepository> logger)
     {
         this.context = context;
         this.userManager = userManager;
         this.roleManager = roleManager;
-        PasswordJwt = configuration.GetValue<string>("ApiSettings:PasswordJwt")!;
+        this.signInManager = signInManager;
+        this.logger = logger;
     }
 
     public async Task<AppUser?> GetUser(string id)
@@ -76,6 +75,8 @@ public class UserRepository : IUserRepository
             await roleManager.CreateAsync(new IdentityRole("registrado"));
         }
 
+        await signInManager.SignInAsync(user, isPersistent: true);
+
         await userManager.AddToRoleAsync(user, "registrado");
         AppUser? registeredUser = await context.Users
             .FirstOrDefaultAsync(user => user.UserName == registerUser.UserName);
@@ -85,54 +86,65 @@ public class UserRepository : IUserRepository
 
     public async Task<UserLoginResponseDto> Login(LoginUserDto loginUser)
     {
-        AppUser? userDb = await context.Users
+        try
+        {
+            AppUser? userDb = await context.Users
             .FirstOrDefaultAsync(user => user.UserName == loginUser.UserName);
 
-        bool isValid = await userManager
-            .CheckPasswordAsync(userDb!, loginUser.Password);
+            bool isValid = await userManager
+                .CheckPasswordAsync(userDb!, loginUser.Password);
 
-        UserLoginResponseDto response = new()
-        {
-            Token = string.Empty,
-            User = null,
-            IsAuthenticated = false,
-            Message = "Usuario no encontrado"
-        };
-
-        if (userDb is null || !isValid)
-        {
-            return response;
-        }
-
-        IList<string> roles = await userManager.GetRolesAsync(userDb);
-
-        JwtSecurityTokenHandler jwtHandler = new();
-        byte[] key = Encoding.ASCII.GetBytes(PasswordJwt!);
-        if (key.Length == 0)
-        {
-            response.IsAuthenticated = false;
-            response.Message = "No se pudo hallar la clave del token";
-            return response;
-        }
-
-        SecurityTokenDescriptor tokenDescriptor = new()
-        {
-            Subject = new ClaimsIdentity(new Claim[]
+            UserLoginResponseDto response = new()
             {
-                new Claim(ClaimTypes.Name, userDb.UserName!),
-                new Claim(ClaimTypes.Role, roles.FirstOrDefault()!)
-            }),
-            Expires = DateTime.UtcNow.AddDays(7),
-            SigningCredentials = new(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-        };
+                User = null,
+                IsAuthenticated = false,
+                Message = "Usuario no encontrado"
+            };
 
-        SecurityToken token = jwtHandler.CreateToken(tokenDescriptor);
+            if (userDb is null || !isValid)
+            {
+                return response;
+            }
 
-        response.Token = jwtHandler.WriteToken(token);
-        response.User = userDb.Adapt<UserDataDto>();
-        response.IsAuthenticated = true;
-        response.Message = "El usuario esta autenticado en el sistema";
+            SignInResult result = await signInManager
+                .PasswordSignInAsync(loginUser.UserName, loginUser.Password, true, true);
 
-        return response;
+            if (result.IsLockedOut)
+            {
+                response.User = userDb.Adapt<UserDataDto>();
+                response.IsAuthenticated = false;
+                response.Message = "El usuario esta bloqueado, demasiados intentos, pruebe más tarde";
+
+                return response;
+            }
+
+            if (!result.Succeeded)
+            {
+                response.User = userDb.Adapt<UserDataDto>();
+                response.IsAuthenticated = false;
+                response.Message = "Falló al autenticar, revise los campos";
+
+                return response;
+            }
+
+            response.User = userDb.Adapt<UserDataDto>();
+            response.IsAuthenticated = true;
+            response.Message = "El usuario está autenticado en el sistema";
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            UserLoginResponseDto response = new()
+            {
+                User = null,
+                IsAuthenticated = false,
+                Message = $"se ha producido una excepción al iniciar sesión: {ex.Message}",
+            };
+
+            logger.LogError(ex, "Se ha producido una excepción al autenticarse");
+            return response;
+        }
+        
     }
 }

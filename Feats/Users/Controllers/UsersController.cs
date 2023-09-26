@@ -115,7 +115,7 @@ public class UsersController : ControllerBase
         }
 
         UserLoginResponseDto response = await userRepository.Login(userToLogin);
-        if (response.User is null || string.IsNullOrEmpty(response.Token))
+        if (response.User is null)
         {
             ApiResponse.StatusCode = HttpStatusCode.BadRequest;
             ApiResponse.ErrorMessages.Add("Error en el inicio de sesión, revise los campos");

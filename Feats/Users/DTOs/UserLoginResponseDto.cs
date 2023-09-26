@@ -8,7 +8,6 @@ namespace ApiPeliculasIdentity.Feats.Users.DTOs;
 public class UserLoginResponseDto
 {
     public required UserDataDto? User { get; set; }
-    public required string Token { get; set; }
 
     public bool IsAuthenticated { get; set; } = false;
     public string? Message { get; set; }
